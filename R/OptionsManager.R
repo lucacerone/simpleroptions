@@ -24,6 +24,7 @@ OptionsManager <-
       verbose = FALSE,
       current_options = NULL,
       options_path = NULL,
+      allowed_options = NULL,
       
       ##### Constructor
       initialize = function(default_options = list(),
@@ -42,15 +43,15 @@ OptionsManager <-
         self$initialize_options()
       },
       initialize_options = function() {
+        self$allowed_options <- names(self$default_options)
         
         if (file.exists(self$options_path)) {
-          options <-  jsonlite::fromJSON(self$options_path)
+          options <- jsonlite::fromJSON(self$options_path)
           
           if (self$strict) {
-           allowed_options_names <- names(self$default_options)
            options_names <- names(options)
            
-           if (any(!options_names %in% allowed_options_names)) {
+           if (any(!options_names %in% self$allowed_options)) {
               stop("Some options names are not in the allowed set and strict mode is on.")
            }
           }
@@ -104,6 +105,13 @@ OptionsManager <-
         if (self$auto_save) {
             self$save()
         }
+      },
+      get = function(name) {
+       if (name %in% self$allowed_options) {
+        self$current_options[[name]]
+       } else {
+        stop("Option ", shQuote(name), " not found.")
+       }
       }
     )
   )
