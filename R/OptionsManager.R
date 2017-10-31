@@ -39,13 +39,10 @@ OptionsManager <-
         self$verbose <- verbose
         self$options_path <- options_path
         
-        self$initialize_current_options()
-        
-        if (self$auto_save) {
-          self$save_options_to_file()
-        }
+        self$initialize_options()
       },
-      initialize_current_options = function() {
+      initialize_options = function() {
+        
         if (file.exists(self$options_path)) {
           options <-  jsonlite::fromJSON(self$options_path)
           
@@ -57,16 +54,20 @@ OptionsManager <-
               stop("Some options names are not in the allowed set and strict mode is on.")
            }
           }
+          
+          self$current_options <- options
         } else {
-          options <- list()
+          self$current_options <- self$default_options
+          if (self$auto_save) {
+            self$save()
+          }
         }
-        
-        self$current_options <-
-          modifyList(self$default_options, options, keep.null = TRUE)
+        return(TRUE)
       },
       
       save = function(filename = self$options_path) {
-        options_dir <- dirname(filename)
+        
+        options_dir <- dirname(normalizePath(filename, mustWork = F))
         if (!file.exists(options_dir)) {
           dir.create(
             path = options_dir,
@@ -80,17 +81,11 @@ OptionsManager <-
                     " exists but is not a directory. Options won't be saved.")
           }
         }
-        readr::write_file(json, path = self$current_options_path)
-      },
-      options_full_path = function(level) {
-        path <- self$search_directories[[level]]
-        filename <-
-          file.path(path, self$options_filename)
-        return(filename)
+        json <- jsonlite::toJSON(self$current_options, pretty = T)
+        readr::write_file(json, path = filename)
       },
       set = function(option_name, option_value) {
         package_options <- names(self$default_options)
-        
         if (self$strict) {
           # In strict mode you can only set parameters that have been
           # provided by the package author
@@ -99,7 +94,7 @@ OptionsManager <-
               "You can't set option \" ",
               option_name,
               ".\nAllowed values are ",
-              paste("", package_options, collapse = ","), "."
+              paste0("'", package_options,"'", collapse = ","), "."
             )
           }
         }
@@ -107,7 +102,7 @@ OptionsManager <-
         self$current_options[[option_name]] <- option_value
         
         if (self$auto_save) {
-            self$save_options_files()
+            self$save()
         }
       }
     )
