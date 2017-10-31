@@ -1,19 +1,14 @@
 ##### Helper functions
 
-get_current_folder <- function() {
-  normalizePath(".", mustWork = F)
+user_folder <- function() {
+  folder <- Sys.getenv("HOME")
+  if (nchar(folder) == 0)
+    folder = "~"
+  normalizePath(file.path(folder, paste0(".", getPackageName())), mustWork = FALSE)
 }
 
-get_user_folder <- function() {
-  user_folder <- Sys.getenv("HOME")
-  if (nchar(user_folder) == 0)
-    user_folder = "~"
-  normalizePath(file.path(user_folder, paste0(".", getPackageName())), mustWork = FALSE)
-}
-
-get_system_folder <- function() {
-  normalizePath(file.path("", "usr", "share", "R", getPackageName()),
-                mustWork = FALSE)
+user_options_path <- function(){
+  file.path(user_folder(), paste0(getPackageName(), ".json"))
 }
 
 ##### OptionsManager Class
@@ -23,72 +18,60 @@ OptionsManager <-
     ##### Public Variables
     public = list(
       default_options = NULL,
-      search_directories = NULL,
       auto_save = NULL,
       strict = NULL,
-      encrypted = NULL,
       permissions = NULL,
-      allow_subset = NULL,
       verbose = FALSE,
       current_options = NULL,
-      current_options_path = NULL,
-      options_filename = NULL,
-      level = NULL,
+      options_path = NULL,
       
       ##### Constructor
       initialize = function(default_options = list(),
-                            search_directories = list(project = get_current_folder(),
-                                                      user = get_user_folder(),
-                                                      global = get_system_folder()),
-                            options_filename = paste0(getPackageName(), ".json"),
-                            auto_save = TRUE,
+                            options_path = user_options_path(),
+                            permissions = "644",
                             strict = TRUE,
-                            encrypted = FALSE,
-                            permissions = list(project = "644",
-                                               user = "644",
-                                               global = "644"),
-                            allow_subset = TRUE,
+                            auto_save = TRUE,
                             verbose = FALSE) {
         self$default_options <- default_options
-        self$search_directories <- search_directories
         self$auto_save <- auto_save
         self$strict <- strict
-        self$encrypted <- encrypted
         self$permissions <- permissions
-        self$allow_subset <- allow_subset
         self$verbose <- verbose
-        self$options_filename <- options_filename
-        self$level <- private$get_level()
+        self$options_path <- options_path
         
-        self$current_options_path <-
-          private$options_full_path(self$level)
-        
-        self$set_current_options()
+        self$initialize_current_options()
         
         if (self$auto_save) {
-          self$save_options_files()
+          self$save_options_to_file()
         }
       },
-      set_current_options = function() {
-        if (file.exists(self$current_options_path)) {
-          level_options <-  jsonlite::toJSON(self$current_options_path)
+      initialize_current_options = function() {
+        if (file.exists(self$options_path)) {
+          options <-  jsonlite::fromJSON(self$options_path)
+          
+          if (self$strict) {
+           allowed_options_names <- names(self$default_options)
+           options_names <- names(options)
+           
+           if (any(!options_names %in% allowed_options_names)) {
+              stop("Some options names are not in the allowed set and strict mode is on.")
+           }
+          }
         } else {
-          level_options <- list()
+          options <- list()
         }
         
         self$current_options <-
-          modifyList(self$default_options, level_options)
+          modifyList(self$default_options, options, keep.null = TRUE)
       },
-      save_options_files = function() {
-        json <- jsonlite::toJSON(self$current_options, pretty = T)
-        
-        options_dir <- self$search_directories[[self$level]]
+      
+      save = function(filename = self$options_path) {
+        options_dir <- dirname(filename)
         if (!file.exists(options_dir)) {
           dir.create(
             path = options_dir,
             showWarnings = self$verbose,
-            recursive = TRUE,
-            mode = "700"
+            recursive = TRUE
           )
         } else {
           dirinfo <- file.info(options_dir)
@@ -97,30 +80,35 @@ OptionsManager <-
                     " exists but is not a directory. Options won't be saved.")
           }
         }
-        
         readr::write_file(json, path = self$current_options_path)
-      }
-    ),
-    private = list(
+      },
       options_full_path = function(level) {
         path <- self$search_directories[[level]]
         filename <-
           file.path(path, self$options_filename)
         return(filename)
       },
-      get_level = function() {
-        # Navigate the search path.
-        # If an options file is found then return the corresponding level, 
-        # otherwise fallback to user.
-        for (level in names(self$search_directories)) {
-          options_full_path <-
-            private$options_full_path(level)
-          if (file.exists(options_full_path)) {
-            return(level)
+      set = function(option_name, option_value) {
+        package_options <- names(self$default_options)
+        
+        if (self$strict) {
+          # In strict mode you can only set parameters that have been
+          # provided by the package author
+          if (!option_name %in% package_options) {
+            stop(
+              "You can't set option \" ",
+              option_name,
+              ".\nAllowed values are ",
+              paste("", package_options, collapse = ","), "."
+            )
           }
         }
         
-        return("user")
+        self$current_options[[option_name]] <- option_value
+        
+        if (self$auto_save) {
+            self$save_options_files()
+        }
       }
     )
   )
