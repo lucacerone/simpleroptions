@@ -48,6 +48,9 @@ OptionsManager <-
         if (file.exists(self$options_path)) {
           options <- jsonlite::fromJSON(self$options_path)
           
+          ### In strict mode the user can't define
+          ### options for a package that haven't been 
+          ### thought of by the package developer.
           if (self$strict) {
            options_names <- names(options)
            
@@ -56,7 +59,21 @@ OptionsManager <-
            }
           }
           
+          ### Here I check whether there is any new option in the
+          ### default values that doesn't appear in the options files.
+          ### If so the values are set and a warning is issued.
+          
+          not_in_options_file <- self$allowed_options[! self$allowed_options %in% names(options)]
+          
+          for (opt in not_in_options_file) {
+            options[[opt]] <- self$default_options[[opt]]
+            warning("Added ", shQuote(opt), " to current options using its default value.") 
+          }
+          
           self$current_options <- options
+          if (self$auto_save && length(not_in_options_file) > 0) {
+            self$save()
+          }
         } else {
           self$current_options <- self$default_options
           if (self$auto_save) {

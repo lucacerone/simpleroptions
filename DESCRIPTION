@@ -1,6 +1,6 @@
 Package: simpleroptions
 Title: Simple Options manager system to be used
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(person("Luca","Cerone", email="luca.cerone@gmail.com", role = c("aut","cre","cph")))
 Description: What the package does (one paragraph).
 Depends: R (>= 3.4.2)
