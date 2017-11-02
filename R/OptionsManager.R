@@ -29,7 +29,7 @@ OptionsManager <-
       ##### Constructor
       initialize = function(default_options = list(),
                             options_path = user_options_path(),
-                            permissions = "644",
+                            permissions = "600",
                             strict = TRUE,
                             auto_save = TRUE,
                             verbose = FALSE) {
@@ -78,6 +78,7 @@ OptionsManager <-
           self$current_options <- self$default_options
           if (self$auto_save) {
             self$save()
+            Sys.chmod(self$options_path, mode = self$permissions)
           }
         }
         return(TRUE)
