@@ -43,6 +43,7 @@ OptionsManager <-
         self$initialize_options()
       },
       initialize_options = function() {
+        #browser()
         self$allowed_options <- names(self$default_options)
         
         if (file.exists(self$options_path)) {
@@ -66,7 +67,11 @@ OptionsManager <-
           not_in_options_file <- self$allowed_options[! self$allowed_options %in% names(options)]
           
           for (opt in not_in_options_file) {
-            options[[opt]] <- self$default_options[[opt]]
+            if (is.null(self$default_options[[opt]])) {
+              options[[opt]] <- list()
+            } else {
+              options[[opt]] <- self$default_options[[opt]]
+            }
             warning("Added ", shQuote(opt), " to current options using its default value.") 
           }
           
