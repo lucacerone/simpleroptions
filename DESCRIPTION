@@ -1,10 +1,16 @@
 Package: simpleroptions
-Title: Simple Options manager system to be used
-Version: 0.1.3
-Authors@R: c(person("Luca","Cerone", email="luca.cerone@gmail.com", role = c("aut","cre","cph")))
-Description: What the package does (one paragraph).
-Depends: R (>= 3.4.2)
+Title: Simple R Options file management system
+Description: simpleroptions help you easily manage options files for your packages and scripts.
+Version: 0.2.0
+Authors@R: c(
+  person("Luca","Cerone", email="luca.cerone@gmail.com", role = c("aut","cre","cph"))
+  )
 License: MIT
+URL: https://github.com/lucacerone/simpleroptions/
+BugReports: https://github.com/lucacerone/simpleroptions/issues
+Depends: R (>= 3.4.2)
 Encoding: UTF-8
 LazyData: true
+VignetteBuilder: knitr
 RoxygenNote: 6.0.1
+

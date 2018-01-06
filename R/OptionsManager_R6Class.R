@@ -1,18 +1,4 @@
-##### Helper functions
-
-user_folder <- function() {
-  folder <- Sys.getenv("HOME")
-  if (nchar(folder) == 0)
-    folder = "~"
-  normalizePath(file.path(folder, paste0(".", getPackageName())), mustWork = FALSE)
-}
-
-user_options_path <- function(){
-  file.path(user_folder(), paste0(getPackageName(), ".json"))
-}
-
-##### OptionsManager Class
-OptionsManager <-
+OptionsManager_R6Class <-
   R6::R6Class(
     "OptionsManager",
     ##### Public Variables
