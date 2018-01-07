@@ -1,4 +1,4 @@
-OptionsManager_R6Class <-
+OptionsManager_R6 <-
   R6::R6Class(
     "OptionsManager",
     ##### Public Variables
@@ -13,12 +13,12 @@ OptionsManager_R6Class <-
       allowed_options = NULL,
       
       ##### Constructor
-      initialize = function(default_options = list(),
-                            options_path = user_options_path(),
-                            permissions = "600",
-                            strict = TRUE,
-                            auto_save = TRUE,
-                            verbose = FALSE) {
+      initialize = function(options_path,
+                            default_options,
+                            permissions,
+                            auto_save,
+                            strict,
+                            verbose) {
         self$default_options <- default_options
         self$auto_save <- auto_save
         self$strict <- strict
@@ -36,21 +36,22 @@ OptionsManager_R6Class <-
           options <- jsonlite::fromJSON(self$options_path)
           
           ### In strict mode the user can't define
-          ### options for a package that haven't been 
+          ### options for a package that haven't been
           ### thought of by the package developer.
           if (self$strict) {
-           options_names <- names(options)
-           
-           if (any(!options_names %in% self$allowed_options)) {
+            options_names <- names(options)
+            
+            if (any(!options_names %in% self$allowed_options)) {
               stop("Some options names are not in the allowed set and strict mode is on.")
-           }
+            }
           }
           
           ### Here I check whether there is any new option in the
           ### default values that doesn't appear in the options files.
           ### If so the values are set and a warning is issued.
           
-          not_in_options_file <- self$allowed_options[! self$allowed_options %in% names(options)]
+          not_in_options_file <-
+            self$allowed_options[!self$allowed_options %in% names(options)]
           
           for (opt in not_in_options_file) {
             if (is.null(self$default_options[[opt]])) {
@@ -58,7 +59,9 @@ OptionsManager_R6Class <-
             } else {
               options[[opt]] <- self$default_options[[opt]]
             }
-            warning("Added ", shQuote(opt), " to current options using its default value.") 
+            warning("Added ",
+                    shQuote(opt),
+                    " to current options using its default value.")
           }
           
           self$current_options <- options
@@ -76,7 +79,6 @@ OptionsManager_R6Class <-
       },
       
       save = function(filename = self$options_path) {
-        
         options_dir <- dirname(normalizePath(filename, mustWork = F))
         if (!file.exists(options_dir)) {
           dir.create(
@@ -94,7 +96,27 @@ OptionsManager_R6Class <-
         json <- jsonlite::toJSON(self$current_options, pretty = T)
         readr::write_file(json, path = filename)
       },
-      set = function(option_name, option_value) {
+      set = function(...) {
+        args_list <- list(...)
+        args_names <- names(args_list)
+        if (any( args_names == "")) {
+          stop("All values must be named")
+        }
+        
+        for ( option_name in args_names ) {
+          private$set_option(option_name, args_list[[option_name]]) 
+        }
+      },
+      get = function(name) {
+        if (name %in% self$allowed_options) {
+          self$current_options[[name]]
+        } else {
+          stop("Option ", shQuote(name), " not found.")
+        }
+      }
+    ),
+    private = list(
+      set_option = function(option_name, option_value) {
         package_options <- names(self$default_options)
         if (self$strict) {
           # In strict mode you can only set parameters that have been
@@ -104,7 +126,8 @@ OptionsManager_R6Class <-
               "You can't set option \" ",
               option_name,
               ".\nAllowed values are ",
-              paste0("'", package_options,"'", collapse = ","), "."
+              paste0("'", package_options, "'", collapse = ","),
+              "."
             )
           }
         }
@@ -112,15 +135,8 @@ OptionsManager_R6Class <-
         self$current_options[[option_name]] <- option_value
         
         if (self$auto_save) {
-            self$save()
+          self$save()
         }
-      },
-      get = function(name) {
-       if (name %in% self$allowed_options) {
-        self$current_options[[name]]
-       } else {
-        stop("Option ", shQuote(name), " not found.")
-       }
       }
     )
   )

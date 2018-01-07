@@ -5,5 +5,5 @@
 NOTES.md
 .Rbuildignore
 *Rproj*
-..Rcheck
+*Rcheck
 *gitignore*
