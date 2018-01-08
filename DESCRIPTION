@@ -1,6 +1,7 @@
 Package: simpleroptions
-Title: Simple R Options file management system
-Description: simpleroptions help you easily manage options files for your packages and scripts.
+Title: Easily manage options files for your packages and scripts
+Description: simpleroptions contains functions to easily setup 
+ and maintain options files in your R packages and scripts.
 Version: 0.2.0
 Authors@R: c(
   person("Luca","Cerone", , email="luca.cerone@gmail.com", role = c("aut","cre","cph"))
@@ -18,3 +19,4 @@ LazyData: true
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.0.1
+Suggests: rmarkdown

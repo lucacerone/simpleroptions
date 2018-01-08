@@ -1,0 +1,104 @@
+---
+title: "simpleroptions for R package developers"
+author: "Luca Cerone"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+`simpleroptions` implements a simple framework to manage option files in your packages and scripts,
+although I think is in packages were it is the most useful.
+
+```{r, include=FALSE}
+unlink("~/.simpleroptions_vignette")
+```
+
+To use it is very simple, in your package you create an `OptionsManager` object (or more) 
+that you can export and document as a normal function.
+
+To create an `OptionManager` is as easy as:
+
+```{r}
+library(simpleroptions)
+pkgOpt <- OptionsManager("~/.simpleroptions_vignette/example.json",
+                        default_options = list(option_1 = "value_1",
+                                               option_2 = 1234)
+                        )
+```
+
+When the code is run the first time `simpleroptions` takes care of creating the directories that are needed
+and creates the file `example.json` in the directory `~/.simpleroptions_vignette`, containing the list `default_options` stored as a json object. The permissions of the newly created files are set by default to
+"600" (read and write for the user who created only), although this only applies to Linux and Mac, in Windows
+this isn't true. You can change the permissions of the file using `permissions = ` when you call `OptionsManager`.
+
+The next time pkgOpt is instantiated, simpleroptions realizes that the file `~/.simpleroptions_vignette/example.json`
+already exists and reads the options values from the file rather than using the values provided in `default_options`.
+
+`pkgOpt` is an R6 object of class OptionsManager that has mainly two methods: `get` and `set`.
+
+As the names imply, `get` is used to get the option values, `set` is used to set the value of an option. 
+By default when `set` is called the value is also changed in the json file (if you want to disable this
+use `auto_save = FALSE` when you call `OptionsManager`).
+
+You can use `get` for the default value of your function arguments, for example 
+
+```{r}
+myfun <- function(x = pkgOpt$get("option_1")) {
+  print(x)
+}
+
+myfun()
+```
+
+If you try to get a value that is not defined an error is thown:
+
+```{r, error = TRUE}
+pkgOpt$get("option_3")
+```
+
+If you export the `pkgOpt` object, your users will be able to change the options to their desired values using
+`set`, for example:
+
+```{r}
+pkgOpt$set(option_1 = "new_value_1", option_2 = 9999)
+```
+
+You can see that the values have been changed:
+```{r}
+myfun()
+```
+
+and in the file too:
+
+```{r}
+cat(readr::read_file("~/.simpleroptions_vignette/example.json"))
+```
+
+To see the values currently in use you can access 
+
+```{r}
+pkgOpt$current_options
+```
+
+Note that by default a user can set options that you didn't specify in default_options, for example
+
+```{r}
+pkgOpt$set(option_3 = "unknown_option")
+pkgOpt$current_options
+```
+
+If you want to prevent this, you can use the option `strict = TRUE` when creating the `ObjectManager`.
+
+We can simulate what would happen in that case:
+
+```{r, error = TRUE}
+pkgOpt$strict <- TRUE
+pkgOpt$set(option_3 = "new_unknown")
+```
+
+The main reason `strict` is not enabled by default is because as you develop your package you might want to 
+add new options. With the current implementation when the user upgrades to the new version, `simpleroptions`
+would throw an error, which is why at the moment `strict = FALSE` the default behaviour.

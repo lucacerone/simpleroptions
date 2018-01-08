@@ -77,7 +77,6 @@ OptionsManager_R6 <-
         }
         return(TRUE)
       },
-      
       save = function(filename = self$options_path) {
         options_dir <- dirname(normalizePath(filename, mustWork = F))
         if (!file.exists(options_dir)) {
@@ -106,6 +105,11 @@ OptionsManager_R6 <-
         for ( option_name in args_names ) {
           private$set_option(option_name, args_list[[option_name]]) 
         }
+      },
+      set_temporary = function(...) {
+        auto_save <- self$auto_save
+        self$set(...)
+        self$auto_save <- auto_save
       },
       get = function(name) {
         if (name %in% self$allowed_options) {
