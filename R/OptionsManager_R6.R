@@ -91,7 +91,7 @@ OptionsManager_R6 <-
                     " exists but is not a directory. Options won't be saved.")
           }
         }
-        json <- jsonlite::toJSON(self$current_options, pretty = T)
+        json <- jsonlite::toJSON(self$current_options, pretty = TRUE)
         readr::write_file(json, path = filename)
       },
       set = function(...) {
