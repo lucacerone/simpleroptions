@@ -3,3 +3,4 @@
 ^\..*gitignore\..*$
 ^cran-comments\.md$
 ^LICENSE\.md$
+^docs$
