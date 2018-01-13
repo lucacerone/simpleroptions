@@ -11,7 +11,7 @@ OptionsManager_R6 <-
       current_options = NULL,
       options_path = NULL,
       allowed_options = NULL,
-      
+
       ##### Constructor
       initialize = function(options_path,
                             default_options,
@@ -25,34 +25,33 @@ OptionsManager_R6 <-
         self$permissions <- permissions
         self$verbose <- verbose
         self$options_path <- options_path
-        
+
         self$initialize_options()
       },
       initialize_options = function() {
-        #browser()
         self$allowed_options <- names(self$default_options)
-        
+
         if (file.exists(self$options_path)) {
           options <- jsonlite::fromJSON(self$options_path)
-          
+
           ### In strict mode the user can't define
           ### options for a package that haven't been
           ### thought of by the package developer.
           if (self$strict) {
             options_names <- names(options)
-            
+
             if (any(!options_names %in% self$allowed_options)) {
-              stop("Some options names are not in the allowed set and strict mode is on.")
+              stop("Some options names are not in the allowed set and strict mode is on.") #nolint
             }
           }
-          
+
           ### Here I check whether there is any new option in the
           ### default values that doesn't appear in the options files.
           ### If so the values are set and a warning is issued.
-          
+
           not_in_options_file <-
             self$allowed_options[!self$allowed_options %in% names(options)]
-          
+
           for (opt in not_in_options_file) {
             if (is.null(self$default_options[[opt]])) {
               options[[opt]] <- list()
@@ -63,7 +62,7 @@ OptionsManager_R6 <-
                     shQuote(opt),
                     " to current options using its default value.")
           }
-          
+
           self$current_options <- options
           if (self$auto_save && length(not_in_options_file) > 0) {
             self$save()
@@ -98,11 +97,11 @@ OptionsManager_R6 <-
       set = function(...) {
         args_list <- list(...)
         args_names <- names(args_list)
-        if (any( args_names == "")) {
+        if (any(args_names == "")) {
           stop("All values must be named")
         }
-        
-        for ( option_name in args_names ) {
+
+        for (option_name in args_names) {
           private$set_option(option_name, args_list[[option_name]]) 
         }
       },
@@ -135,9 +134,9 @@ OptionsManager_R6 <-
             )
           }
         }
-        
+
         self$current_options[[option_name]] <- option_value
-        
+
         if (self$auto_save) {
           self$save()
         }
