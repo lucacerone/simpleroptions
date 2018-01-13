@@ -3,7 +3,6 @@
 .RData
 .Ruserdata
 NOTES.md
-.Rbuildignore
 *Rproj*
 *Rcheck
 *gitignore*
