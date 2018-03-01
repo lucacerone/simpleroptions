@@ -2,7 +2,7 @@ Package: simpleroptions
 Title: Easily Manage Options Files for your Packages and Scripts
 Description: A framework to easily setup 
  and maintain options files in your R packages and scripts.
-Version: 0.2.0
+Version: 0.3.1
 Authors@R: c(
   person("Luca","Cerone", , email="luca.cerone@gmail.com", role = c("aut","cre","cph"))
   )

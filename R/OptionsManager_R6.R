@@ -33,7 +33,7 @@ OptionsManager_R6 <-
 
         if (file.exists(self$options_path)) {
           options <- jsonlite::fromJSON(self$options_path)
-
+          print(options)
           ### In strict mode the user can't define
           ### options for a package that haven't been
           ### thought of by the package developer.
@@ -56,27 +56,24 @@ OptionsManager_R6 <-
             if (is.null(self$default_options[[opt]])) {
               options[[opt]] <- list()
             } else {
+              
               options[[opt]] <- self$default_options[[opt]]
             }
             warning("Added ",
                     shQuote(opt),
                     " to current options using its default value.")
           }
-
+          
+          print(options)
           self$current_options <- options
-          if (self$auto_save && length(not_in_options_file) > 0) {
-            self$save()
+          print(self$current_options)
+          if (length(not_in_options_file) > 0) {
+            if (self$auto_save) self$save()
           }
-        } else {
-          self$current_options <- self$default_options
-          if (self$auto_save) {
-            self$save()
-            Sys.chmod(self$options_path, mode = self$permissions)
-          }
-        }
+        } 
         return(TRUE)
       },
-      save = function(filename = self$options_path) {
+      save = function(filename = self$options_path, permissions = self$permissions) {
         options_dir <- dirname(normalizePath(filename, mustWork = F))
         if (!file.exists(options_dir)) {
           dir.create(
@@ -93,6 +90,7 @@ OptionsManager_R6 <-
         }
         json <- jsonlite::toJSON(self$current_options, pretty = TRUE)
         readr::write_file(json, path = filename)
+        Sys.chmod(filename, mode = permissions)
       },
       set = function(...) {
         args_list <- list(...)
