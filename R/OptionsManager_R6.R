@@ -33,7 +33,7 @@ OptionsManager_R6 <-
 
         if (file.exists(self$options_path)) {
           options <- jsonlite::fromJSON(self$options_path)
-          print(options)
+
           ### In strict mode the user can't define
           ### options for a package that haven't been
           ### thought of by the package developer.
@@ -64,9 +64,8 @@ OptionsManager_R6 <-
                     " to current options using its default value.")
           }
           
-          print(options)
           self$current_options <- options
-          print(self$current_options)
+          
           if (length(not_in_options_file) > 0) {
             if (self$auto_save) self$save()
           }
